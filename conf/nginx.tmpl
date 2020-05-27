@@ -245,7 +245,8 @@ server {
 	{{ end }}
 
 	ssl_prefer_server_ciphers on;
-	ssl_session_timeout 5m;
+	{{ $ssl_timeout := coalesce $container.Env.SSL_TIMEOUT "5m" }}
+	ssl_session_timeout {{ $ssl_timeout }};
 	ssl_session_cache shared:SSL:50m;
 	ssl_session_tickets off;
 
