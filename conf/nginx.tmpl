@@ -115,6 +115,24 @@ server {
 }
 {{ end }}
 
+{{ range $host, $containers := groupByMulti $ "Env.FRONT_HOST" "," }}
+    {{ $host := trim $host }}
+    {{ $default_server := index (dict $host "" $default_host "default_server") $host }}
+server {
+	server_name {{ $host }};
+	listen 80 {{ $default_server }};
+	{{ if $enable_ipv6 }}
+	listen [::]:80 {{ $default_server }};
+	{{ end }}
+
+    {{ range $container := $containers }}
+    location {{ $container.FRONT_ENDPOINT }} {
+        proxy_pass {{ $container.VIRTUAL_HOST }}
+    }
+    {{ end }}
+}
+{{ end }}
+
 {{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
 
 {{ $host := trim $host }}
