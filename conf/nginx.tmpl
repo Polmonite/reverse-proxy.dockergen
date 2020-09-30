@@ -117,7 +117,6 @@ server {
 
 {{ range $host, $containers := groupByMulti $ "Env.FRONT_HOST" "," }}
     {{ $host := trim $host }}
-	{{ $default_host := or ($.Env.DEFAULT_HOST) "" }}
     {{ $default_server := index (dict $host "" $default_host "default_server") $host }}
 server {
 	server_name {{ $host }};
