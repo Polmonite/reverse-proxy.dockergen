@@ -127,8 +127,8 @@ server {
 	{{ end }}
 
     {{ range $container := $containers }}
-    location {{ "Env.FRONT_ENDPOINT" }} {
-        proxy_pass {{ "Env.VIRTUAL_HOST" }}
+    location {{ $container.FRONT_ENDPOINT }} {
+        proxy_pass {{ $container.VIRTUAL_HOST }}
     }
     {{ end }}
 }
