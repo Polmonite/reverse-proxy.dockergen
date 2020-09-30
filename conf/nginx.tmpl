@@ -115,6 +115,25 @@ server {
 }
 {{ end }}
 
+{{ range $host, $containers := groupByMulti $ "Env.FRONT_HOST" "," }}
+    {{ $host := trim $host }}
+	{{ $default_host := or ($.Env.DEFAULT_HOST) "" }}
+    {{ $default_server := index (dict $host "" $default_host "default_server") $host }}
+server {
+	server_name {{ $host }};
+	listen 80 {{ $default_server }};
+	{{ if $enable_ipv6 }}
+	listen [::]:80 {{ $default_server }};
+	{{ end }}
+
+    {{ range $container := $containers }}
+    location {{ "Env.FRONT_ENDPOINT" }} {
+        proxy_pass {{ "Env.VIRTUAL_HOST" }}
+    }
+    {{ end }}
+}
+{{ end }}
+
 {{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
 
 {{ $host := trim $host }}
@@ -171,9 +190,6 @@ upstream {{ $upstream_name }} {
 
 {{/* Get the VIRTUAL_ROOT By containers w/ use fastcgi root */}}
 {{ $vhost_root := or (first (groupByKeys $containers "Env.VIRTUAL_ROOT")) "/var/www/public" }}
-
-{{/* Get the VIRTUAL_PATH By containers w/ use fastcgi root */}}
-{{ $vpath := or (first (groupByKeys $containers "Env.VIRTUAL_PATH")) "/" }}
 
 
 {{/* Get the first cert name defined by containers w/ the same vhost */}}
@@ -275,7 +291,7 @@ server {
 	include /etc/nginx/vhost.d/default;
 	{{ end }}
 
-	location {{ vpath }} {
+	location / {
 		{{ if eq $proto "uwsgi" }}
 		include uwsgi_params;
 		uwsgi_pass {{ trim $proto }}://{{ trim $upstream_name }};
